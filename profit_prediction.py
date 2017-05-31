@@ -58,12 +58,12 @@ for attribute in final_npp.columns.difference(['net_profit']):
     le = preprocessing.LabelEncoder()
     final_npp[attribute] = le.fit_transform(final_npp[attribute])
     
-#sns.distplot(final_npp['net_profit'] )
+#sns.distplot(final_npp['net_profit'] ) 观察net_profit分布情况
 
 
-#print(final_npp.loc[final_npp['net_profit'] < -1500000])
+#print(final_npp.loc[final_npp['net_profit'] < -1500000]) label or conditional based selection
 #final_npp.to_csv('final_npp.csv', encoding = 'utf-8')
-final_npp.drop(final_npp.index[[39,52]],inplace = True)
+final_npp.drop(final_npp.index[[39,52]],inplace = True) #drop rows based on index selection
 #print(final_npp.loc[final_npp['net_profit'] < -1700000])
 
 
