@@ -5,13 +5,17 @@ Spyder Editor
 This is a temporary script file.
 """
 
-#-*- coding=utf-8 -*-
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from sklearn import metrics
 #import seaborn as sns
+#import sys
+
+#reload(sys)
+#sys.setdefaultencoding('utf-8')
+
 
 #import attributes table
 attrs =  pd.read_excel('attrs.xlsx',sheetname='Sheet1', encoding = 'utf-8') 
@@ -26,8 +30,10 @@ a = a.reset_index(drop=False)
 
 
 #replace wrong information with correct data while transforming
+a.replace(42741,'1-6',inplace=True)
 a.replace(42928,'7-12',inplace=True)
 a.replace(u'其他',u'其它',inplace=True)
+a.drop(u'适用场景',axis = 1, inplace=True)
 
 
 
@@ -51,20 +57,24 @@ average_profit.reset_index(inplace=True)
 #merge attributes table and mean profit table based on sku_id
 final_npp = pd.merge(a,average_profit, how = 'inner', on = 'sku_id')
 final_npp.drop('sku_id', axis = 1, inplace=True)
+#pd.options.display.float_format='{:,.0f}'.format
+final_npp['net_profit'] = final_npp['net_profit'].astype(int)
 
 
 #label encoder method to handle the categorical columns except the net_profit column
 for attribute in final_npp.columns.difference(['net_profit']):
     le = preprocessing.LabelEncoder()
     final_npp[attribute] = le.fit_transform(final_npp[attribute])
-    
+
+
 #sns.distplot(final_npp['net_profit'] ) 观察net_profit分布情况
 
 
 #print(final_npp.loc[final_npp['net_profit'] < -1500000]) label or conditional based selection
-#final_npp.to_csv('final_npp.csv', encoding = 'utf-8')
-final_npp.drop(final_npp.index[[39,52]],inplace = True) #drop rows based on index selection
-#print(final_npp.loc[final_npp['net_profit'] < -1700000])
+#final_npp.to_csv('final_npp.csv', encoding = 'utf-8') to show final_npp content
+final_npp.drop(final_npp.index[[39,52,537]],inplace = True) #drop rows which have large noise based on index selection
+
+
 
 
 
@@ -88,21 +98,22 @@ from sklearn.linear_model import LinearRegression
 lm = LinearRegression()
 lm.fit(X_train,y_train)
 predictions = lm.predict(X_test)
+
+
 '''
-
-
-
 #build random forest model
 from sklearn.ensemble import RandomForestRegressor
   
-rfr = RandomForestRegressor(n_estimators = 100, 
-                              max_features = 13,
-                              max_depth=4,
+rfr = RandomForestRegressor(n_estimators = 50, 
+                              max_features = 12,
+                              max_depth=3,
                               #min_samples_split=4,
                               oob_score=True,
                               n_jobs=-1)
 rfr.fit(X_train, y_train)
 predictions = rfr.predict(X_test)
+
+
 
 
 #model evaluation
