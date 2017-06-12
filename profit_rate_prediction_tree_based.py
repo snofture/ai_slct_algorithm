@@ -136,7 +136,7 @@ cols = cols[-1:]+cols[:-1]
 net_profit_percent = net_profit_percent[cols]
 
 
-
+'''
 net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地',
                                                                  u'分类', 
                                                                  u'包装',
@@ -149,12 +149,13 @@ net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地'
     prefix=['origin', 'classification','package','pack unit','unit vol','taste'
             ,'juice percent','carbohydra','import/export'])
 '''
+'''
 #from sklearn.preprocessing import LabelEncoder
 #label encoder method to handle the categorical columns except the net_profit column
 for attribute in net_profit_percent.columns.difference(['profit_rate','price']):
     le = preprocessing.LabelEncoder()
     net_profit_percent[attribute] = le.fit_transform(net_profit_percent[attribute])
- '''
+'''
 #one-hot encoding method to hand categorical/discrete features
 #for attribute in net_profit_percent.columns.difference(['profit_rate','price']): 
 #enc = preprocessing.OneHotEncoder(categorical_features='all',
@@ -205,28 +206,28 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(net_profit_percent.drop('profit_rate',axis=1), 
                                                         net_profit_percent['profit_rate'], 
                                                         test_size=0.30, 
-                                                        random_state = 101)
+                                                   random_state = 101)
+    '''
     X_train = X_train.as_matrix()
     y_train = y_train.as_matrix()
     X_test = X_test.as_matrix()
     y_test = y_test.as_matrix()
-    
+    '''
     y_test[y_test == 0] = 1
     
     
     
-    
+    '''    
     #build linear regression model
     from sklearn.linear_model import LinearRegression
     lm = LinearRegression()
     lm.fit(X_train,y_train)
     predictions = lm.predict(X_test)
+    '''    
     
     
-    '''
     #build random forest model
     from sklearn.ensemble import RandomForestRegressor
-      
     rfr = RandomForestRegressor(n_estimators = 55, 
                                   max_features = 8,
                                   max_depth=3,
@@ -235,7 +236,7 @@ if __name__ == '__main__':
                                   n_jobs=-1)
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
-    '''
+    
     
     #model evaluation
     plt.scatter(y_test,predictions)
@@ -244,3 +245,4 @@ if __name__ == '__main__':
     print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
     print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
     
+
