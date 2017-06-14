@@ -108,7 +108,6 @@ sku_profit = sku_profit[cols]
 
 
 #filter sku_profit table
-#sku_profit = sku_profit[sku_profit['gmv'] <= -1] #the number of gmv == 0 rows should be less than 35216
 sku_profit_1 = sku_profit[sku_profit['gmv'] >= 1 ]
 sku_profit_2 = sku_profit[sku_profit['gmv'] <= -1 ]
 sku_profit = pd.concat([sku_profit_1,sku_profit_2])
@@ -120,7 +119,7 @@ sku_profit = sku_profit[sku_profit['net_profit'] < sku_profit['gmv']]
 sku_profit['profit_rate'] = sku_profit['net_profit']/sku_profit['gmv']*100
 #sku_profit[~np.isfinite(sku_profit)] = np.nan
 sku_profit.drop(['net_profit','gmv'], axis =1, inplace = True)
-#drop off the ones with sku_profit_rate<-500 and >500
+#drop off the ones with sku_profit_rate<-300 and >300
 sku_profit = sku_profit[sku_profit['profit_rate'] > -300]
 sku_profit = sku_profit[sku_profit['profit_rate'] < 300]
 
@@ -133,19 +132,16 @@ average_profit.reset_index(inplace=True)
 
 #merge attributes table and mean profit table based on sku_id
 final_npp = pd.merge(a,average_profit, how = 'inner', on = 'sku_id')
-#final_npp.drop('sku_id', axis = 1, inplace=True)
 final_npp['profit_rate'] = final_npp['profit_rate'].astype(int)
 #final_npp.drop(final_npp.index[[412,530,85,380,395,483,535,497]],inplace = True)
 final_npp = final_npp[final_npp['profit_rate'] > -150]
 #final_npp.to_csv('final_npp.csv', encoding = 'utf-8') to show final_npp content
-#f = final_npp.iloc[38]
 final_npp.drop(final_npp.index[[38,412,530]],inplace = True) #drop rows which have large noise based on index selection
 
 
 
 #import sku_price table
 sku_price = pd.read_csv('drinks.csv')
-#print(sku_price.columns)
 sku_price.drop(u'Unnamed: 0', axis = 1, inplace = True)
 sku_price['sku_id'] = sku_price['item_sku_id']
 sku_price.drop(['item_first_cate_cd','item_second_cate_cd',
@@ -165,6 +161,7 @@ cols = cols[-1:]+cols[:-1]
 net_profit_percent = net_profit_percent[cols]
 
 
+#replace numbers with characters and set price feature to be integer
 net_profit_percent[u'果汁成分含量'].replace(1,'100%', inplace = True)
 net_profit_percent['price'] = net_profit_percent['price'].apply(lambda x: int(x))
 
@@ -249,10 +246,11 @@ if __name__ == '__main__':
     
     #train_test_split
     from sklearn.model_selection import train_test_split
-    X_train, X_test, y_train, y_test = train_test_split(net_profit_percent.drop('profit_rate',axis=1), 
+    X_train, X_test, y_train, y_test = train_test_split(net_profit_percent.drop('profit_rate',
+                                                                                axis=1), 
                                                         net_profit_percent['profit_rate'], 
                                                         test_size=0.30, 
-                                                   random_state = 101)
+                                                        random_state = 101)
     '''
     X_train = X_train.as_matrix()
     y_train = y_train.as_matrix()
@@ -263,25 +261,33 @@ if __name__ == '__main__':
     
     
     
-    '''    
+    '''   
     #build linear regression model
     from sklearn.linear_model import LinearRegression
     lm = LinearRegression()
     lm.fit(X_train,y_train)
     predictions = lm.predict(X_test)
-    '''    
+    '''
     
-    
+    '''
     #build random forest model
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(n_estimators = 55, 
-                                  max_features = 8)
-                                  #max_depth=3,
-                                  #min_samples_split=4,
-                                  #oob_score=True,
-                                  #n_jobs=-1)
+    rfr = RandomForestRegressor(  n_estimators = 80, 
+                                  max_features = 'auto',
+                                  max_depth=8,
+                                  min_samples_leaf=3,
+                                  min_samples_split=4,
+                                  oob_score=True,
+                                  random_state = 42,
+                                  n_jobs=-1,
+                                  warm_start=False)
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
+    
+    
+    feature_importances=pd.Series(rfr.feature_importances_,index=X_train.columns)
+    #feature_importances.sort(inplace=True)
+    #feature_importances.plot(kind='barh',figsize=(7,6))
     
     
     #model evaluation
@@ -290,5 +296,52 @@ if __name__ == '__main__':
     print('MSE:', metrics.mean_squared_error(y_test, predictions))
     print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
     print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
-    
+    params = rfr.get_params()
+    '''
+    '''
+    from sklearn.ensemble import RandomForestRegressor
+    results=[]
+    n = [10,30,50,80,100,150,200,300]
+    d = [2,3,4,5,6,7,8]
+    f = [2,3,4,5,6,7,8]
 
+    for trees in n:
+        for depth in d:
+            for feature in f:
+                model=RandomForestRegressor(  n_estimators = trees,
+                                              max_depth = depth,
+                                              max_features = feature,
+                                              min_samples_split=2,
+                                              oob_score=True,
+                                              random_state = 42,
+                                              n_jobs=-1)
+                model.fit(X_train,y_train)
+                print(trees,'trees',depth, 'max_depth', feature, 'max_features')
+                predictions = model.predict(X_test)
+                mape = mean_absolute_percentage_error(y_test,predictions)
+                print('MAPE is:',mape)
+                results.append(mape)
+                print('')
+    '''
+    
+    from sklearn.grid_search import GridSearchCV
+    from sklearn.ensemble import RandomForestRegressor
+    rfr = RandomForestRegressor(  n_estimators = 300, 
+                                  max_features = 8,
+                                  max_depth=7,
+                                  min_samples_leaf=3,
+                                  min_samples_split=4,
+                                  oob_score=True,
+                                  random_state = 42,
+                                  n_jobs=-1,
+                                  warm_start=False)
+    param_grid = { 
+    'n_estimators': [30,50,80,100,150,200,300,400],
+    'max_features': ['auto', 'sqrt', 'log2'],
+    'max_depth':[2,3,4,5,6,7,8]
+    }
+
+    CV_rfc = GridSearchCV(estimator=rfr, param_grid=param_grid, cv= 7, scoring = 'neg_mean_squared_error')
+    CV_rfc.fit(X_train, y_train)
+    print (CV_rfc.best_params_)
+    
