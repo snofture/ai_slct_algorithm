@@ -261,25 +261,33 @@ if __name__ == '__main__':
     
     
     
-    '''    
+    '''   
     #build linear regression model
     from sklearn.linear_model import LinearRegression
     lm = LinearRegression()
     lm.fit(X_train,y_train)
     predictions = lm.predict(X_test)
-    '''    
+    '''
     
-    
+    '''
     #build random forest model
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(n_estimators = 55, 
-                                  max_features = 8)
-                                  #max_depth=3,
-                                  #min_samples_split=4,
-                                  #oob_score=True,
-                                  #n_jobs=-1)
+    rfr = RandomForestRegressor(  n_estimators = 80, 
+                                  max_features = 'auto',
+                                  max_depth=8,
+                                  min_samples_leaf=3,
+                                  min_samples_split=4,
+                                  oob_score=True,
+                                  random_state = 42,
+                                  n_jobs=-1,
+                                  warm_start=False)
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
+    
+    
+    feature_importances=pd.Series(rfr.feature_importances_,index=X_train.columns)
+    #feature_importances.sort(inplace=True)
+    #feature_importances.plot(kind='barh',figsize=(7,6))
     
     
     #model evaluation
@@ -288,5 +296,52 @@ if __name__ == '__main__':
     print('MSE:', metrics.mean_squared_error(y_test, predictions))
     print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
     print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
-    
+    params = rfr.get_params()
+    '''
+    '''
+    from sklearn.ensemble import RandomForestRegressor
+    results=[]
+    n = [10,30,50,80,100,150,200,300]
+    d = [2,3,4,5,6,7,8]
+    f = [2,3,4,5,6,7,8]
 
+    for trees in n:
+        for depth in d:
+            for feature in f:
+                model=RandomForestRegressor(  n_estimators = trees,
+                                              max_depth = depth,
+                                              max_features = feature,
+                                              min_samples_split=2,
+                                              oob_score=True,
+                                              random_state = 42,
+                                              n_jobs=-1)
+                model.fit(X_train,y_train)
+                print(trees,'trees',depth, 'max_depth', feature, 'max_features')
+                predictions = model.predict(X_test)
+                mape = mean_absolute_percentage_error(y_test,predictions)
+                print('MAPE is:',mape)
+                results.append(mape)
+                print('')
+    '''
+    
+    from sklearn.grid_search import GridSearchCV
+    from sklearn.ensemble import RandomForestRegressor
+    rfr = RandomForestRegressor(  n_estimators = 300, 
+                                  max_features = 8,
+                                  max_depth=7,
+                                  min_samples_leaf=3,
+                                  min_samples_split=4,
+                                  oob_score=True,
+                                  random_state = 42,
+                                  n_jobs=-1,
+                                  warm_start=False)
+    param_grid = { 
+    'n_estimators': [30,50,80,100,150,200,300,400],
+    'max_features': ['auto', 'sqrt', 'log2'],
+    'max_depth':[2,3,4,5,6,7,8]
+    }
+
+    CV_rfc = GridSearchCV(estimator=rfr, param_grid=param_grid, cv= 7, scoring = 'neg_mean_squared_error')
+    CV_rfc.fit(X_train, y_train)
+    print (CV_rfc.best_params_)
+    
