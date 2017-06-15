@@ -15,13 +15,14 @@ import re
 #reload(sys)
 #sys.setdefaultencoding('utf-8')
 
-
+'''
 #build MAPE function
 #from sklearn.utils import check_array
 def mean_absolute_percentage_error(y,p):
     #y = check_array(y)
     #p = check_array(p)
     return np.mean(np.abs((y-p)/y))*100
+'''    
 
 #import attributes table
 attrs =  pd.read_excel('attrs.xlsx',sheetname='Sheet1', encoding = 'utf-8') 
@@ -336,12 +337,40 @@ if __name__ == '__main__':
                                   n_jobs=-1,
                                   warm_start=False)
     param_grid = { 
-    'n_estimators': [30,50,80,100,150,200,300,400],
+    'n_estimators': [30,50,80,100,150,200,300],
     'max_features': ['auto', 'sqrt', 'log2'],
-    'max_depth':[2,3,4,5,6,7,8]
+    'max_depth':[3,4,5,6,7,8],
+    #'min_samples_leaf':[2,3,4,5],
+    'min_samples_split':[2,3,4,5,6]
     }
+    from sklearn.metrics import make_scorer
+    def mean_absolute_percentage_error(y,p):
+    #y = check_array(y)
+    #p = check_array(p)
+        return np.mean(np.abs((y-p)/y))*100
+    MAPE = make_scorer(mean_absolute_percentage_error)
 
-    CV_rfc = GridSearchCV(estimator=rfr, param_grid=param_grid, cv= 7, scoring = 'neg_mean_squared_error')
+    CV_rfc= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=8, scoring=MAPE)
     CV_rfc.fit(X_train, y_train)
     print (CV_rfc.best_params_)
     
+    '''
+    from sklearn.ensemble import RandomForestRegressor
+    rfr = RandomForestRegressor(  n_estimators = 30, 
+                                  max_features = 'sqrt',
+                                  max_depth=8,
+                                  min_samples_leaf=2,
+                                  min_samples_split=4,
+                                  oob_score=True,
+                                  random_state = 42,
+                                  n_jobs=-1,
+                                  warm_start=False)
+    rfr.fit(X_train, y_train)
+    predictions = rfr.predict(X_test)
+    
+    plt.scatter(y_test,predictions)
+    print('MAE:', metrics.mean_absolute_error(y_test, predictions))
+    print('MSE:', metrics.mean_squared_error(y_test, predictions))
+    print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
+    print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
+    '''
