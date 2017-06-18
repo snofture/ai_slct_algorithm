@@ -10,19 +10,19 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from sklearn import metrics
 import re
-#import seaborn as sns
+import seaborn as sns
 #import sys
 #reload(sys)
 #sys.setdefaultencoding('utf-8')
 
-'''
+
 #build MAPE function
 #from sklearn.utils import check_array
 def mean_absolute_percentage_error(y,p):
     #y = check_array(y)
     #p = check_array(p)
     return np.mean(np.abs((y-p)/y))*100
-'''    
+
 
 #import attributes table
 attrs =  pd.read_excel('attrs.xlsx',sheetname='Sheet1', encoding = 'utf-8') 
@@ -156,17 +156,16 @@ net_profit_percent.drop('sku_id', axis = 1, inplace=True)
 
 
 
+#replace numbers with characters and set price feature to be integer
+net_profit_percent[u'果汁成分含量'].replace(1,'100%', inplace = True)
+net_profit_percent['price'] = net_profit_percent['price'].apply(lambda x: int(x))
+net_profit_percent[u'sku价格'] = net_profit_percent['price']
+net_profit_percent.drop('price', axis = 1, inplace = True)
+
 #put the last column to the very front
 cols = net_profit_percent.columns.tolist()
 cols = cols[-1:]+cols[:-1]
 net_profit_percent = net_profit_percent[cols]
-
-
-#replace numbers with characters and set price feature to be integer
-net_profit_percent[u'果汁成分含量'].replace(1,'100%', inplace = True)
-net_profit_percent['price'] = net_profit_percent['price'].apply(lambda x: int(x))
-
-
 
 
 #ont hot encoding method 
@@ -226,7 +225,7 @@ def encode_onehot(df, cols):
 
 
 #label encoder method to handle discrete/categorical features except continuous features
-for attribute in net_profit_percent.columns.difference(['profit_rate','price']):
+for attribute in net_profit_percent.columns.difference(['profit_rate','sku价格']):
     le = preprocessing.LabelEncoder()
     net_profit_percent[attribute] = le.fit_transform(net_profit_percent[attribute])
 
@@ -260,8 +259,7 @@ if __name__ == '__main__':
     '''
     y_test[y_test == 0] = 1
     
-    
-    
+      
     '''   
     #build linear regression model
     from sklearn.linear_model import LinearRegression
@@ -270,35 +268,8 @@ if __name__ == '__main__':
     predictions = lm.predict(X_test)
     '''
     
-    '''
-    #build random forest model
-    from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 80, 
-                                  max_features = 'auto',
-                                  max_depth=8,
-                                  min_samples_leaf=3,
-                                  min_samples_split=4,
-                                  oob_score=True,
-                                  random_state = 42,
-                                  n_jobs=-1,
-                                  warm_start=False)
-    rfr.fit(X_train, y_train)
-    predictions = rfr.predict(X_test)
     
-    
-    feature_importances=pd.Series(rfr.feature_importances_,index=X_train.columns)
-    #feature_importances.sort(inplace=True)
-    #feature_importances.plot(kind='barh',figsize=(7,6))
-    
-    
-    #model evaluation
-    plt.scatter(y_test,predictions)
-    print('MAE:', metrics.mean_absolute_error(y_test, predictions))
-    print('MSE:', metrics.mean_squared_error(y_test, predictions))
-    print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
-    print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
-    params = rfr.get_params()
-    '''
+    #old-fashioned method to search for best params combination, for loop
     '''
     from sklearn.ensemble import RandomForestRegressor
     results=[]
@@ -325,6 +296,9 @@ if __name__ == '__main__':
                 print('')
     '''
     
+    
+    #fantastic method to find best params combination by GridSearchCV
+    '''
     from sklearn.grid_search import GridSearchCV
     from sklearn.ensemble import RandomForestRegressor
     rfr = RandomForestRegressor(  n_estimators = 300, 
@@ -337,8 +311,8 @@ if __name__ == '__main__':
                                   n_jobs=-1,
                                   warm_start=False)
     param_grid = { 
-    'n_estimators': [30,50,80,100,150,200,300],
-    'max_features': ['auto', 'sqrt', 'log2'],
+    'n_estimators': [30,50,100,150,200,300],
+    'max_features': [3,4,5,6,7],
     'max_depth':[3,4,5,6,7,8],
     #'min_samples_leaf':[2,3,4,5],
     'min_samples_split':[2,3,4,5,6]
@@ -350,17 +324,18 @@ if __name__ == '__main__':
         return np.mean(np.abs((y-p)/y))*100
     MAPE = make_scorer(mean_absolute_percentage_error)
 
-    CV_rfc= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=8, scoring=MAPE)
+    CV_rfc= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=10, 
+                         scoring='neg_mean_absolute_error')
     CV_rfc.fit(X_train, y_train)
     print (CV_rfc.best_params_)
-    
     '''
+    
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 30, 
-                                  max_features = 'sqrt',
-                                  max_depth=8,
+    rfr = RandomForestRegressor(  n_estimators = 300, 
+                                  max_features = 7,
+                                  max_depth=6,
                                   min_samples_leaf=2,
-                                  min_samples_split=4,
+                                  min_samples_split=2,
                                   oob_score=True,
                                   random_state = 42,
                                   n_jobs=-1,
@@ -368,9 +343,64 @@ if __name__ == '__main__':
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
     
-    plt.scatter(y_test,predictions)
+    #plt.scatter(y_test,predictions)
     print('MAE:', metrics.mean_absolute_error(y_test, predictions))
     print('MSE:', metrics.mean_squared_error(y_test, predictions))
     print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
     print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
+    
+    
+    
+    #subplots method of matplotlib 
+    fig, axes = plt.subplots(nrows = 2, ncols = 1)
+    axes[0].scatter(y_test, predictions)
+    plt.sca(axes[1]) #Use the pyplot interface to change just one subplot
+    plt.xticks(range(X_train.shape[1]),X_train.columns, color='r')
+    axes[1].bar(range(X_train.shape[1]),rfr.feature_importances_, color= 'b',align = 'center')
+    #plt.show()
+    #indices = np.argsort(rfr.feature_importances_)[::-1]
+    
+        
+    #fig plot method matplotlib
+    '''
+    fig = plt.figure()
+    axes = fig.add_axes([0.2,0.3,0.8,0.3])
+    axes.plot(go,rfr.feature_importances_)
+    '''
+    
+    
+    #best way for a single bar plot
+    '''
+    columns = X_train.columns
+    y_pos = np.arange(X_train.shape[1])
+    importances = rfr.feature_importances_
+    
+    plt.bar(y_pos,importances,align='center', alpha = 1)
+    plt.xticks(y_pos,columns)
+    plt.xlabel('features')
+    plt.ylabel('importances')
+    plt.title('feature importances')
+    plt.show()
+    '''
+    
+    
+    #sns method ploting a series
+    '''
+    sns.set(style="whitegrid", color_codes=True)
+    feature_importances=pd.Series(rfr.feature_importances_,index=X_train.columns)
+    feature_importances.sort_values(inplace=True)
+    sns.swarmplot(feature_importances)
+    '''
+    
+    '''
+    objects = ['Python', 'C++', 'Java', 'Perl', 'Scala', 'Lisp']
+    y_pos = np.arange(len(objects))
+    performance = [10,8,6,4,2,1]
+    
+    plt.bar(y_pos, performance, align='center', alpha=0.5)
+    plt.xticks(y_pos, objects)
+    plt.ylabel('Usage')
+    plt.title('Programming language usage')
+     
+    plt.show()
     '''
