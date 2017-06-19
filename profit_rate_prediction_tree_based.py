@@ -35,7 +35,8 @@ a = pd.pivot_table(sku_attrs[['sku_id','attr_name','attr_value']],
                     values=['attr_value'],fill_value = u'其他' ,aggfunc='max')
 a.columns = a.columns.droplevel(level=0)
 a = a.reset_index(drop=False)
-
+#sugar = a[u'是否含糖'].value_counts()
+#sugar_ = a[u'是否含糖'].describe()
 
 #replace wrong information with correct data while transforming
 a.replace(42741,'1-6',inplace=True)
@@ -48,7 +49,7 @@ a.replace(u'其他',u'其它',inplace=True)
 #a.drop(u'功能饮料', axis = 1, inplace = True)
 #a.drop(u'是否含糖', axis = 1, inplace = True)
 #a.drop(u'茶饮料系列', axis = 1, inplace = True)
-a.drop([u'适用场景',u'功能饮料',u'是否含糖',u'茶饮料系列'],axis = 1, inplace = True) 
+a.drop([u'适用场景', u'茶饮料系列'],axis = 1, inplace = True) 
 #a.drop(u'碳酸饮料分类', axis = 1, inplace = True)
 
 
@@ -56,9 +57,10 @@ a.drop([u'适用场景',u'功能饮料',u'是否含糖',u'茶饮料系列'],axis
 a[u'产品产地'] = a[u'产品产地'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'包装'] = a[u'包装'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'分类'] = a[u'分类'].apply(lambda x: re.sub('.*#\$','',x))
+a[u'功能饮料'] = a[u'功能饮料'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'碳酸饮料分类'] = a[u'碳酸饮料分类'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'口味'] = a[u'口味'].apply(lambda x: re.sub('.*#\$','',x))
-
+a[u'是否含糖'] = a[u'是否含糖'].apply(lambda x: re.sub('.*#\$','',x))
 
 #filter normal string data
 #a.applymap(lambda x: x.split('/')[0])
@@ -81,8 +83,31 @@ def juice_percentage(x):
         return x[u'果汁成分含量']
     
 a[u'果汁成分含量'] = a.apply(lambda x: juice_percentage(x), axis = 1)
+a[u'果汁成分含量'].replace(u'浓缩100%以下',u'100%以下', inplace = True)
 
 
+
+a[u'包装'].replace(u'瓶装',u'其它',inplace = True)
+a[u'包装'].replace(u'利乐装',u'其它',inplace = True)
+a[u'包装'].replace(u'不限',u'其它',inplace = True)
+a[u'分类'].replace(u'果汁',u'果蔬汁',inplace = True)
+a[u'功能饮料'].replace(u'运动饮料',u'能量饮料',inplace = True)
+a[u'碳酸饮料分类'].replace(u'雪碧/七喜',u'可乐',inplace = True)
+a[u'碳酸饮料分类'].replace(u'盐汽水',u'苏打水',inplace = True)
+a[u'口味'].replace(u'混合果味',u'混合饮料',inplace = True)
+a[u'口味'].replace(u'不限',u'其它',inplace = True)
+a[u'是否含糖'].replace(u'含木糖醇',u'含糖',inplace = True)
+a[u'单件容量'].replace(u'其它',u'250mL及以下',inplace = True)
+a[u'单件容量'].replace(u'250ml及以下',u'250mL及以下',inplace = True)
+a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
+a[u'产品产地'].replace(u'马来西亚',u'泰国',inplace = True)
+a[u'产品产地'].replace(u'韩国',u'日本',inplace = True)
+a[u'产品产地'].replace(u'港澳台',u'其它',inplace = True)
+a[u'产品产地'].replace(u'澳大利亚',u'其它',inplace = True)
+
+
+#juice = a[u'果汁成分含量'].value_counts()
+origin = a[u'产品产地'].value_counts()
 
 #a[u'果汁成分含量'] = a.apply(lambda x: 1 if (x[u'分类'] == u'果蔬汁') & (x[u'果汁成分含量'] == Null) else x[u'果汁成分含量'] )
 
@@ -117,12 +142,12 @@ sku_profit = sku_profit[sku_profit['net_profit'] < sku_profit['gmv']]
 
 
 #make the profit_rate column
-sku_profit['profit_rate'] = sku_profit['net_profit']/sku_profit['gmv']*100
+sku_profit['profit_rate'] = (sku_profit['net_profit']/sku_profit['gmv'])*100
 #sku_profit[~np.isfinite(sku_profit)] = np.nan
 sku_profit.drop(['net_profit','gmv'], axis =1, inplace = True)
 #drop off the ones with sku_profit_rate<-300 and >300
 sku_profit = sku_profit[sku_profit['profit_rate'] > -300]
-sku_profit = sku_profit[sku_profit['profit_rate'] < 300]
+sku_profit = sku_profit[sku_profit['profit_rate'] < 200]
 
 
 #extract the mean sku_id profit table
@@ -311,8 +336,8 @@ if __name__ == '__main__':
                                   n_jobs=-1,
                                   warm_start=False)
     param_grid = { 
-    'n_estimators': [30,50,100,150,200,300],
-    'max_features': [3,4,5,6,7],
+    'n_estimators': [30,50,100,150,200],
+    'max_features': [4,5,6,7],
     'max_depth':[3,4,5,6,7,8],
     #'min_samples_leaf':[2,3,4,5],
     'min_samples_split':[2,3,4,5,6]
@@ -325,15 +350,15 @@ if __name__ == '__main__':
     MAPE = make_scorer(mean_absolute_percentage_error)
 
     CV_rfc= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=10, 
-                         scoring='neg_mean_absolute_error')
-    CV_rfc.fit(X_train, y_train)
+                         scoring=MAPE)
+    CV_rfc.fit(X_train, y_train) 
     print (CV_rfc.best_params_)
     '''
     
     from sklearn.ensemble import RandomForestRegressor
     rfr = RandomForestRegressor(  n_estimators = 300, 
-                                  max_features = 7,
-                                  max_depth=6,
+                                  max_features = 8,
+                                  max_depth=7,
                                   min_samples_leaf=2,
                                   min_samples_split=2,
                                   oob_score=True,
