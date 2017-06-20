@@ -15,7 +15,7 @@ import re
 #build MAPE function
 def mean_absolute_percentage_error(y,p):
    
-    return np.mean(np.abs((y-p)/y))*100
+    return np.mean(np.abs((y-p)/y))
 
 
 #import attributes table
@@ -24,19 +24,19 @@ sku_attrs = attrs[['sku_id','attr_name','attr_value']]
 
 
 #transform original table to pivot_table 
-a = pd.pivot_table(sku_attrs[['sku_id','attr_name','attr_value']],
-                   index=['sku_id'],columns=['attr_name'],
-                    values=['attr_value'],fill_value = u'其他' ,aggfunc='max')
+a = pd.pivot_table(sku_attrs, index=['sku_id'], columns=['attr_name'],
+                    values=['attr_value'],fill_value = np.nan, aggfunc='max')
 a.columns = a.columns.droplevel(level=0)
 a = a.reset_index(drop=False)
-
+#print(a[u'分类'].value_counts())
+a = a.apply(lambda x: x.fillna(x.value_counts().index[0]))
 
 #replace wrong information with correct data while transforming
 a.replace(42741,'1-6',inplace=True)
 a.replace(42928,'7-12',inplace=True)
 a.replace(u'其他',u'其它',inplace=True)
 
-a.drop([u'适用场景', u'茶饮料系列'],axis = 1, inplace = True) 
+a.drop([u'适用场景', u'茶饮料系列',u'碳酸饮料分类',u'是否含糖',u'进口/国产',u'功能饮料'],axis = 1, inplace = True) 
 
 
 
@@ -44,15 +44,15 @@ a.drop([u'适用场景', u'茶饮料系列'],axis = 1, inplace = True)
 a[u'产品产地'] = a[u'产品产地'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'包装'] = a[u'包装'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'分类'] = a[u'分类'].apply(lambda x: re.sub('.*#\$','',x))
-a[u'功能饮料'] = a[u'功能饮料'].apply(lambda x: re.sub('.*#\$','',x))
-a[u'碳酸饮料分类'] = a[u'碳酸饮料分类'].apply(lambda x: re.sub('.*#\$','',x))
+#a[u'功能饮料'] = a[u'功能饮料'].apply(lambda x: re.sub('.*#\$','',x))
+#a[u'碳酸饮料分类'] = a[u'碳酸饮料分类'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'口味'] = a[u'口味'].apply(lambda x: re.sub('.*#\$','',x))
-a[u'是否含糖'] = a[u'是否含糖'].apply(lambda x: re.sub('.*#\$','',x))
+#a[u'是否含糖'] = a[u'是否含糖'].apply(lambda x: re.sub('.*#\$','',x))
 
 #filter normal string data
 a[u'分类'] = a[u'分类'].apply(lambda x: x.split('/')[0])
 a[u'口味'] = a[u'口味'].apply(lambda x: x.split('/')[0])
-a[u'碳酸饮料分类 '] = a[u'碳酸饮料分类'].apply(lambda x: x.split('/')[0])
+#a[u'碳酸饮料分类 '] = a[u'碳酸饮料分类'].apply(lambda x: x.split('/')[0])
 
 def juice_percentage(x):
     if (x[u'分类'] == u'果蔬汁') & (x[u'果汁成分含量'] == 'None'):
@@ -77,22 +77,20 @@ a[u'包装'].replace(u'瓶装',u'其它',inplace = True)
 a[u'包装'].replace(u'利乐装',u'其它',inplace = True)
 a[u'包装'].replace(u'不限',u'其它',inplace = True)
 a[u'分类'].replace(u'果汁',u'果蔬汁',inplace = True)
-a[u'功能饮料'].replace(u'运动饮料',u'能量饮料',inplace = True)
-a[u'碳酸饮料分类'].replace(u'雪碧/七喜',u'可乐',inplace = True)
-a[u'碳酸饮料分类'].replace(u'盐汽水',u'苏打水',inplace = True)
+#a[u'功能饮料'].replace(u'运动饮料',u'能量饮料',inplace = True)
+#a[u'碳酸饮料分类'].replace(u'雪碧/七喜',u'可乐',inplace = True)
+#a[u'碳酸饮料分类'].replace(u'盐汽水',u'苏打水',inplace = True)
 a[u'口味'].replace(u'混合果味',u'混合饮料',inplace = True)
 a[u'口味'].replace(u'不限',u'其它',inplace = True)
-a[u'是否含糖'].replace(u'含木糖醇',u'含糖',inplace = True)
+#a[u'是否含糖'].replace(u'含木糖醇',u'含糖',inplace = True)
 a[u'单件容量'].replace(u'其它',u'250mL及以下',inplace = True)
 a[u'单件容量'].replace(u'250ml及以下',u'250mL及以下',inplace = True)
-a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
+#a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
 a[u'产品产地'].replace(u'马来西亚',u'泰国',inplace = True)
 a[u'产品产地'].replace(u'韩国',u'日本',inplace = True)
 a[u'产品产地'].replace(u'港澳台',u'其它',inplace = True)
 a[u'产品产地'].replace(u'澳大利亚',u'其它',inplace = True)
 
-
-#juice = a[u'果汁成分含量'].value_counts()
 origin = a[u'产品产地'].value_counts()
 
 
@@ -110,10 +108,9 @@ cols = cols[-1:]+cols[:-1]
 sku_profit = sku_profit[cols]
 
 
-
 #filter sku_profit table
-sku_profit_1 = sku_profit[sku_profit['gmv'] >= 1 ]
-sku_profit_2 = sku_profit[sku_profit['gmv'] <= -1 ]
+sku_profit_1 = sku_profit[sku_profit['gmv'] >= 0.5 ]
+sku_profit_2 = sku_profit[sku_profit['gmv'] <= -0.5 ]
 sku_profit = pd.concat([sku_profit_1,sku_profit_2])
 sku_profit = sku_profit[sku_profit['net_profit'] < sku_profit['gmv']]
 #sns.distplot(final_npp['net_profit'] ) 观察net_profit分布情况
@@ -123,9 +120,9 @@ sku_profit = sku_profit[sku_profit['net_profit'] < sku_profit['gmv']]
 sku_profit['profit_rate'] = (sku_profit['net_profit']/sku_profit['gmv'])*100
 #sku_profit[~np.isfinite(sku_profit)] = np.nan
 sku_profit.drop(['net_profit','gmv'], axis =1, inplace = True)
-#drop off the ones with sku_profit_rate<-300 and >300
-sku_profit = sku_profit[sku_profit['profit_rate'] > -300]
-sku_profit = sku_profit[sku_profit['profit_rate'] < 200]
+
+sku_profit = sku_profit[sku_profit['profit_rate'] > -70]
+sku_profit = sku_profit[sku_profit['profit_rate'] < 100]
 
 
 #extract the mean sku_id profit table
@@ -133,15 +130,11 @@ average_profit = sku_profit.groupby('sku_id').mean()
 average_profit.reset_index(inplace=True)
 
 
-
 #merge attributes table and mean profit table based on sku_id
 final_npp = pd.merge(a,average_profit, how = 'inner', on = 'sku_id')
 final_npp['profit_rate'] = final_npp['profit_rate'].astype(int)
-#final_npp.drop(final_npp.index[[412,530,85,380,395,483,535,497]],inplace = True)
-final_npp = final_npp[final_npp['profit_rate'] > -150]
 #final_npp.to_csv('final_npp.csv', encoding = 'utf-8') to show final_npp content
-final_npp.drop(final_npp.index[[38,412,530]],inplace = True) #drop rows which have large noise based on index selection
-
+final_npp = final_npp[final_npp['profit_rate'] != 0]
 
 
 #import sku_price table
@@ -151,8 +144,7 @@ sku_price['sku_id'] = sku_price['item_sku_id']
 sku_price.drop(['item_first_cate_cd','item_second_cate_cd',
                 'item_third_cate_cd','item_sku_id'], axis = 1, inplace = True)
 
-
-    
+   
 #merge final_npp table with sku_price table based on sku_id 
 net_profit_percent = pd.merge(final_npp,sku_price, how = 'inner', on = 'sku_id')
 net_profit_percent.drop('sku_id', axis = 1, inplace=True)
@@ -173,38 +165,55 @@ net_profit_percent = net_profit_percent[cols]
 
 #net_profit_percent = encode_onehot(net_profit_percent, [u'产品产地'])
 
-
+'''
 #label encoder method to handle discrete/categorical features except continuous features
 for attribute in net_profit_percent.columns.difference(['profit_rate','sku价格']):
     le = preprocessing.LabelEncoder()
     net_profit_percent[attribute] = le.fit_transform(net_profit_percent[attribute])
 
-   
+'''
+net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地',
+                                                                 u'分类', 
+                                                                 u'包装',
+                                                                 u'包装件数',
+                                                                 u'单件容量',
+                                                                 u'口味',
+                                                                 u'果汁成分含量'],
+                                                                 #u'进口/国产',
+                                                                 #u'碳酸饮料分类'],
+    prefix=['origin', 'classification','package','packunit','unitvol','taste'
+            ,'juicepercent'])
+
+#normalize continuous features('price')
+net_profit_percent[u'sku价格'] = net_profit_percent[u'sku价格'].apply(lambda x: 
+    (x-net_profit_percent[u'sku价格'].mean())/net_profit_percent[u'sku价格'].std())
+
 
 if __name__ == '__main__':    
     
-    
+    #net_profit_percent.drop(net_profit_percent.index[[227,476,383,293,392,360]], inplace = True)
+    net_profit_percent.drop(net_profit_percent.index[[392,360]], inplace = True)
     #train_test_split
     from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(net_profit_percent.drop('profit_rate',
                                                                                 axis=1), 
                                                         net_profit_percent['profit_rate'], 
-                                                        test_size=0.30, 
+                                                        test_size=0.30,
                                                         random_state = 101)
 
-    y_test[y_test == 0] = 1
+    #y_test[y_test == 0] = 1
     
          
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 300, 
+    rfr = RandomForestRegressor(  n_estimators = 800, 
                                   max_features = 8,
-                                  max_depth=7,
-                                  min_samples_leaf=2,
+                                  max_depth=8,
+                                  min_samples_leaf=1,
                                   min_samples_split=2,
                                   oob_score=True,
-                                  random_state = 42,
-                                  n_jobs=-1,
-                                  warm_start=False)
+                                  #random_state = 42,
+                                  n_jobs=-1)
+                                  #warm_start=False)
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
     
@@ -214,7 +223,12 @@ if __name__ == '__main__':
     print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)))
     print('MAPE:', mean_absolute_percentage_error(y_test,predictions))
     
-      
+    #columns = net_profit_percent.columns
+    #print (sorted(zip(map(lambda x: round(x, 4), rfr.feature_importances_), columns),reverse=True)) 
+    
+    
+    
+    
     #subplots method of matplotlib 
     fig, axes = plt.subplots(nrows = 2, ncols = 1)
     axes[0].scatter(y_test, predictions)

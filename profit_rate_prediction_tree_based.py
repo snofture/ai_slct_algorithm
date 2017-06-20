@@ -21,7 +21,7 @@ import seaborn as sns
 def mean_absolute_percentage_error(y,p):
     #y = check_array(y)
     #p = check_array(p)
-    return np.mean(np.abs((y-p)/y))*100
+    return np.mean(np.abs((y-p)/y))
 
 
 #import attributes table
@@ -46,27 +46,28 @@ a.replace(u'其他',u'其它',inplace=True)
 
 #drop irrevelant features
 #a.drop(u'适用场景',axis = 1, inplace=True)
-#a.drop(u'功能饮料', axis = 1, inplace = True)
-#a.drop(u'是否含糖', axis = 1, inplace = True)
+a.drop(u'功能饮料', axis = 1, inplace = True)
+a.drop(u'是否含糖', axis = 1, inplace = True)
 #a.drop(u'茶饮料系列', axis = 1, inplace = True)
 a.drop([u'适用场景', u'茶饮料系列'],axis = 1, inplace = True) 
-#a.drop(u'碳酸饮料分类', axis = 1, inplace = True)
+a.drop(u'碳酸饮料分类', axis = 1, inplace = True)
+a.drop(u'进口/国产', axis = 1, inplace = True)
 
 
 #use regular expression method to filter complex string data           
 a[u'产品产地'] = a[u'产品产地'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'包装'] = a[u'包装'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'分类'] = a[u'分类'].apply(lambda x: re.sub('.*#\$','',x))
-a[u'功能饮料'] = a[u'功能饮料'].apply(lambda x: re.sub('.*#\$','',x))
-a[u'碳酸饮料分类'] = a[u'碳酸饮料分类'].apply(lambda x: re.sub('.*#\$','',x))
+#a[u'功能饮料'] = a[u'功能饮料'].apply(lambda x: re.sub('.*#\$','',x))
+#a[u'碳酸饮料分类'] = a[u'碳酸饮料分类'].apply(lambda x: re.sub('.*#\$','',x))
 a[u'口味'] = a[u'口味'].apply(lambda x: re.sub('.*#\$','',x))
-a[u'是否含糖'] = a[u'是否含糖'].apply(lambda x: re.sub('.*#\$','',x))
+#a[u'是否含糖'] = a[u'是否含糖'].apply(lambda x: re.sub('.*#\$','',x))
 
 #filter normal string data
 #a.applymap(lambda x: x.split('/')[0])
 a[u'分类'] = a[u'分类'].apply(lambda x: x.split('/')[0])
 a[u'口味'] = a[u'口味'].apply(lambda x: x.split('/')[0])
-a[u'碳酸饮料分类 '] = a[u'碳酸饮料分类'].apply(lambda x: x.split('/')[0])
+#a[u'碳酸饮料分类 '] = a[u'碳酸饮料分类'].apply(lambda x: x.split('/')[0])
 
 def juice_percentage(x):
     if (x[u'分类'] == u'果蔬汁') & (x[u'果汁成分含量'] == 'None'):
@@ -91,15 +92,15 @@ a[u'包装'].replace(u'瓶装',u'其它',inplace = True)
 a[u'包装'].replace(u'利乐装',u'其它',inplace = True)
 a[u'包装'].replace(u'不限',u'其它',inplace = True)
 a[u'分类'].replace(u'果汁',u'果蔬汁',inplace = True)
-a[u'功能饮料'].replace(u'运动饮料',u'能量饮料',inplace = True)
-a[u'碳酸饮料分类'].replace(u'雪碧/七喜',u'可乐',inplace = True)
-a[u'碳酸饮料分类'].replace(u'盐汽水',u'苏打水',inplace = True)
+#a[u'功能饮料'].replace(u'运动饮料',u'能量饮料',inplace = True)
+#a[u'碳酸饮料分类'].replace(u'雪碧/七喜',u'可乐',inplace = True)
+#a[u'碳酸饮料分类'].replace(u'盐汽水',u'苏打水',inplace = True)
 a[u'口味'].replace(u'混合果味',u'混合饮料',inplace = True)
 a[u'口味'].replace(u'不限',u'其它',inplace = True)
-a[u'是否含糖'].replace(u'含木糖醇',u'含糖',inplace = True)
+#a[u'是否含糖'].replace(u'含木糖醇',u'含糖',inplace = True)
 a[u'单件容量'].replace(u'其它',u'250mL及以下',inplace = True)
 a[u'单件容量'].replace(u'250ml及以下',u'250mL及以下',inplace = True)
-a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
+#a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
 a[u'产品产地'].replace(u'马来西亚',u'泰国',inplace = True)
 a[u'产品产地'].replace(u'韩国',u'日本',inplace = True)
 a[u'产品产地'].replace(u'港澳台',u'其它',inplace = True)
@@ -117,6 +118,8 @@ def edit_package_column(i):
         i = i.split('#')[0]
         return i
 '''
+
+
 
 #import profit table
 sku_profit = pd.read_excel('sku_profit.xlsx',sheetname = 'Sheet123')
@@ -138,6 +141,7 @@ sku_profit_1 = sku_profit[sku_profit['gmv'] >= 1 ]
 sku_profit_2 = sku_profit[sku_profit['gmv'] <= -1 ]
 sku_profit = pd.concat([sku_profit_1,sku_profit_2])
 sku_profit = sku_profit[sku_profit['net_profit'] < sku_profit['gmv']]
+
 #sns.distplot(final_npp['net_profit'] ) 观察net_profit分布情况
 
 
@@ -146,9 +150,9 @@ sku_profit['profit_rate'] = (sku_profit['net_profit']/sku_profit['gmv'])*100
 #sku_profit[~np.isfinite(sku_profit)] = np.nan
 sku_profit.drop(['net_profit','gmv'], axis =1, inplace = True)
 #drop off the ones with sku_profit_rate<-300 and >300
-sku_profit = sku_profit[sku_profit['profit_rate'] > -300]
-sku_profit = sku_profit[sku_profit['profit_rate'] < 200]
-
+sku_profit = sku_profit[sku_profit['profit_rate'] > -70]
+sku_profit = sku_profit[sku_profit['profit_rate'] < 100]
+#sku_profit = sku_profit[sku_profit['profit_rate'] != 0]
 
 #extract the mean sku_id profit table
 average_profit = sku_profit.groupby('sku_id').mean()
@@ -159,10 +163,10 @@ average_profit.reset_index(inplace=True)
 #merge attributes table and mean profit table based on sku_id
 final_npp = pd.merge(a,average_profit, how = 'inner', on = 'sku_id')
 final_npp['profit_rate'] = final_npp['profit_rate'].astype(int)
+final_npp = final_npp[final_npp['profit_rate'] != 0]
 #final_npp.drop(final_npp.index[[412,530,85,380,395,483,535,497]],inplace = True)
-final_npp = final_npp[final_npp['profit_rate'] > -150]
 #final_npp.to_csv('final_npp.csv', encoding = 'utf-8') to show final_npp content
-final_npp.drop(final_npp.index[[38,412,530]],inplace = True) #drop rows which have large noise based on index selection
+#final_npp.drop(final_npp.index[[38,412,530]],inplace = True) #drop rows which have large noise based on index selection
 
 
 
@@ -186,6 +190,8 @@ net_profit_percent[u'果汁成分含量'].replace(1,'100%', inplace = True)
 net_profit_percent['price'] = net_profit_percent['price'].apply(lambda x: int(x))
 net_profit_percent[u'sku价格'] = net_profit_percent['price']
 net_profit_percent.drop('price', axis = 1, inplace = True)
+#net_profit_percent.drop(u'碳酸饮料分类', axis = 1, inplace = True)
+#net_profit_percent.drop(u'碳酸饮料分类', axis = 1, inplace = True)
 
 #put the last column to the very front
 cols = net_profit_percent.columns.tolist()
@@ -268,7 +274,7 @@ net_profit_percent['price'] = net_profit_percent['price'].apply(lambda x:
 
 if __name__ == '__main__':    
     
-    
+    net_profit_percent.drop(net_profit_percent.index[[392,360]], inplace = True)
     #train_test_split
     from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(net_profit_percent.drop('profit_rate',
@@ -283,7 +289,9 @@ if __name__ == '__main__':
     y_test = y_test.as_matrix()
     '''
     y_test[y_test == 0] = 1
-    
+    #X_test.drop(X_test.index[[392,360]], inplace = True)
+    #y_test.drop(y_test.index[[392,360]], inplace = True)
+
       
     '''   
     #build linear regression model
@@ -328,19 +336,19 @@ if __name__ == '__main__':
     from sklearn.ensemble import RandomForestRegressor
     rfr = RandomForestRegressor(  n_estimators = 300, 
                                   max_features = 8,
-                                  max_depth=7,
+                                  max_depth=8,
                                   min_samples_leaf=3,
-                                  min_samples_split=4,
+                                  min_samples_split=2,
                                   oob_score=True,
                                   random_state = 42,
                                   n_jobs=-1,
                                   warm_start=False)
     param_grid = { 
-    'n_estimators': [30,50,100,150,200],
+    'n_estimators': [50,100,150,200,300],
     'max_features': [4,5,6,7],
-    'max_depth':[3,4,5,6,7,8],
+    'max_depth':[4,5,6,7,8],
     #'min_samples_leaf':[2,3,4,5],
-    'min_samples_split':[2,3,4,5,6]
+    'min_samples_split':[2,3,4,5]
     }
     from sklearn.metrics import make_scorer
     def mean_absolute_percentage_error(y,p):
@@ -350,21 +358,21 @@ if __name__ == '__main__':
     MAPE = make_scorer(mean_absolute_percentage_error)
 
     CV_rfc= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=10, 
-                         scoring=MAPE)
+                         scoring='neg_mean_absolute_error')
     CV_rfc.fit(X_train, y_train) 
     print (CV_rfc.best_params_)
     '''
     
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 300, 
+    rfr = RandomForestRegressor(  n_estimators = 800, 
                                   max_features = 8,
-                                  max_depth=7,
-                                  min_samples_leaf=2,
+                                  max_depth=8,
+                                  min_samples_leaf=1,
                                   min_samples_split=2,
                                   oob_score=True,
-                                  random_state = 42,
-                                  n_jobs=-1,
-                                  warm_start=False)
+                                  #random_state = 42,
+                                  n_jobs=-1)
+                                  #warm_start=False)
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
     
@@ -384,8 +392,15 @@ if __name__ == '__main__':
     axes[1].bar(range(X_train.shape[1]),rfr.feature_importances_, color= 'b',align = 'center')
     #plt.show()
     #indices = np.argsort(rfr.feature_importances_)[::-1]
+    inn = y_test.reset_index()
+    '''
+    from sklearn.linear_model import Ridge
+    ridge = Ridge(alpha=7)  
+    ridge.fit(X_train, y_train)
+    coef = ridge.coef_
+    '''
+
     
-        
     #fig plot method matplotlib
     '''
     fig = plt.figure()
