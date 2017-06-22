@@ -181,14 +181,17 @@ net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地'
                                                                  u'果汁成分含量'],
                                                                  #u'进口/国产',
                                                                  #u'碳酸饮料分类'],
-    prefix=['origin', 'classification','package','packunit','unitvol','taste'
-            ,'juicepercent'])
+    prefix=['origin', 'classifi','package','pakunit','unitvol','taste'
+            ,'juiceper'])
 
 #normalize continuous features('price')
 net_profit_percent[u'sku价格'] = net_profit_percent[u'sku价格'].apply(lambda x: 
-    (x-net_profit_percent[u'sku价格'].mean())/net_profit_percent[u'sku价格'].std())
-
-
+    (x-net_profit_percent[u'sku价格'].mean())/(net_profit_percent[u'sku价格'].std()))
+'''
+net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].apply(lambda x: 
+    (x-net_profit_percent['profit_rate'].mean())/(net_profit_percent['profit_rate'].std()))
+'''   
+    
 if __name__ == '__main__':    
     
     #net_profit_percent.drop(net_profit_percent.index[[227,476,383,293,392,360]], inplace = True)
@@ -205,15 +208,17 @@ if __name__ == '__main__':
     
          
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 800, 
-                                  max_features = 8,
+    rfr = RandomForestRegressor(  n_estimators = 500, 
+                                  max_features = 'auto',
                                   max_depth=8,
-                                  min_samples_leaf=1,
-                                  min_samples_split=2,
+                                  min_samples_leaf=4,
+                                  min_samples_split=8,
                                   oob_score=True,
-                                  #random_state = 42,
+                                  random_state = 42,
+                                  criterion = 'mae',
                                   n_jobs=-1)
-                                  #warm_start=False)
+                                  #warm_start=False,
+                                  #max_leaf_nodes = 30)
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
     
