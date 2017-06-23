@@ -19,7 +19,7 @@ def mean_absolute_percentage_error(y,p):
 
 
 #import attributes table
-attrs =  pd.read_excel('attrs.xlsx',sheetname='Sheet1', encoding = 'utf-8') 
+attrs =  pd.read_table('sku_attrs_jd.csv',sep = '\t', encoding = 'utf-8') 
 sku_attrs = attrs[['sku_id','attr_name','attr_value']]
 
 
@@ -36,7 +36,7 @@ a.replace(42741,'1-6',inplace=True)
 a.replace(42928,'7-12',inplace=True)
 a.replace(u'其他',u'其它',inplace=True)
 
-a.drop([u'适用场景', u'茶饮料系列',u'碳酸饮料分类',u'是否含糖',u'进口/国产',u'功能饮料'],axis = 1, inplace = True) 
+a.drop([u'适用场景', u'茶饮料系列',u'碳酸饮料分类',u'是否含糖',u'功能饮料'],axis = 1, inplace = True) 
 
 
 
@@ -85,7 +85,7 @@ a[u'口味'].replace(u'不限',u'其它',inplace = True)
 #a[u'是否含糖'].replace(u'含木糖醇',u'含糖',inplace = True)
 a[u'单件容量'].replace(u'其它',u'250mL及以下',inplace = True)
 a[u'单件容量'].replace(u'250ml及以下',u'250mL及以下',inplace = True)
-#a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
+a[u'进口/国产'].replace(u'其它',u'国产',inplace = True)
 a[u'产品产地'].replace(u'马来西亚',u'泰国',inplace = True)
 a[u'产品产地'].replace(u'韩国',u'日本',inplace = True)
 a[u'产品产地'].replace(u'港澳台',u'其它',inplace = True)
@@ -178,11 +178,12 @@ net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地'
                                                                  u'包装件数',
                                                                  u'单件容量',
                                                                  u'口味',
-                                                                 u'果汁成分含量'],
-                                                                 #u'进口/国产',
+                                                                 u'果汁成分含量',
+                                                                 u'品牌',
+                                                                 u'进口/国产'],
                                                                  #u'碳酸饮料分类'],
     prefix=['origin', 'classifi','package','pakunit','unitvol','taste'
-            ,'juiceper'])
+            ,'juiceper','brand','import'])
 
 
 #normalize continuous features('price')
@@ -194,7 +195,6 @@ net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].apply(lamb
     (x-net_profit_percent['profit_rate'].mean())/(net_profit_percent['profit_rate'].std()))
 '''   
     
-net_profit_percent.info()
 
 if __name__ == '__main__':    
     

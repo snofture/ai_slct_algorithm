@@ -25,7 +25,7 @@ def mean_absolute_percentage_error(y,p):
 
 
 #import attributes table
-attrs =  pd.read_excel('attrs.xlsx',sheetname='Sheet1', encoding = 'utf-8') 
+attrs =  pd.read_table('sku_attrs_jd.csv',sep = '\t', encoding = 'utf-8') 
 sku_attrs = attrs[['sku_id','attr_name','attr_value']]
 
 
@@ -264,10 +264,10 @@ for attribute in net_profit_percent.columns.difference(['profit_rate','sku价格
 
 
 #normalize continuous features('price')
-'''
-net_profit_percent['price'] = net_profit_percent['price'].apply(lambda x: 
-    (x-net_profit_percent['price'].mean())/net_profit_percent['price'].std())
-'''
+
+net_profit_percent[u'sku价格'] = net_profit_percent[u'sku价格'].apply(lambda x: 
+    (x-net_profit_percent[u'sku价格'].mean())/net_profit_percent[u'sku价格'].std())
+
 
 
     
@@ -364,11 +364,11 @@ if __name__ == '__main__':
     '''
     
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 800, 
-                                  max_features = 8,
+    rfr = RandomForestRegressor(  n_estimators = 500, 
+                                  max_features = 'auto',
                                   max_depth=8,
-                                  min_samples_leaf=1,
-                                  min_samples_split=2,
+                                  min_samples_leaf=4,
+                                  min_samples_split=8,
                                   oob_score=True,
                                   #random_state = 42,
                                   n_jobs=-1)
@@ -392,7 +392,6 @@ if __name__ == '__main__':
     axes[1].bar(range(X_train.shape[1]),rfr.feature_importances_, color= 'b',align = 'center')
     #plt.show()
     #indices = np.argsort(rfr.feature_importances_)[::-1]
-    inn = y_test.reset_index()
     '''
     from sklearn.linear_model import Ridge
     ridge = Ridge(alpha=7)  
@@ -444,7 +443,3 @@ if __name__ == '__main__':
      
     plt.show()
     '''
-    sku_attr_pop = pd.read_table('sku_attr_pop.csv',sep='\t')
-    sku_attr_pop = sku_attr_pop[['sku_id','attr_name','attr_value']]
-    pop_attr = pd.pivot_table(sku_attr_pop,index=['sku_id'],columns = ['attr_name'],
-                   values = ['attr_value'],fill_value='NOOO',aggfunc= 'max')
