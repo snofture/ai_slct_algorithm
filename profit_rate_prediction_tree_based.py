@@ -444,3 +444,7 @@ if __name__ == '__main__':
      
     plt.show()
     '''
+    sku_attr_pop = pd.read_table('sku_attr_pop.csv',sep='\t')
+    sku_attr_pop = sku_attr_pop[['sku_id','attr_name','attr_value']]
+    pop_attr = pd.pivot_table(sku_attr_pop,index=['sku_id'],columns = ['attr_name'],
+                   values = ['attr_value'],fill_value='NOOO',aggfunc= 'max')

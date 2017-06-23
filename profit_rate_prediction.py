@@ -184,14 +184,18 @@ net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地'
     prefix=['origin', 'classifi','package','pakunit','unitvol','taste'
             ,'juiceper'])
 
+
 #normalize continuous features('price')
 net_profit_percent[u'sku价格'] = net_profit_percent[u'sku价格'].apply(lambda x: 
     (x-net_profit_percent[u'sku价格'].mean())/(net_profit_percent[u'sku价格'].std()))
+       
 '''
 net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].apply(lambda x: 
     (x-net_profit_percent['profit_rate'].mean())/(net_profit_percent['profit_rate'].std()))
 '''   
     
+net_profit_percent.info()
+
 if __name__ == '__main__':    
     
     #net_profit_percent.drop(net_profit_percent.index[[227,476,383,293,392,360]], inplace = True)
@@ -206,7 +210,35 @@ if __name__ == '__main__':
 
     #y_test[y_test == 0] = 1
     
-         
+    #optimize algotirhm and tune parameter with GridSearchCV
+    '''
+    from sklearn.grid_search import GridSearchCV
+    from sklearn.ensemble import RandomForestRegressor
+    rfr = RandomForestRegressor(  n_estimators = 300, 
+                                  max_features = 'auto',
+                                  max_depth=8,
+                                  min_samples_leaf=4,
+                                  min_samples_split=8,
+                                  oob_score=True,
+                                  random_state = 42,
+                                  n_jobs=-1,
+                                  criterion = 'mae')
+    param_grid = { 
+    'max_depth':[5,8],
+    'min_samples_leaf':[2,3,4],
+    'min_samples_split':[6,7,8],
+    'random_state':[42,55]
+    }
+
+
+    CV_rfr= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=5) 
+
+    CV_rfr.fit(X_train, y_train) 
+    print (CV_rfr.best_params_)
+    '''
+    
+       
+    #implement RandomForestregressor to solve regression problem    
     from sklearn.ensemble import RandomForestRegressor
     rfr = RandomForestRegressor(  n_estimators = 500, 
                                   max_features = 'auto',
@@ -222,6 +254,8 @@ if __name__ == '__main__':
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
     
+      
+ 
     #plt.scatter(y_test,predictions)
     print('MAE:', metrics.mean_absolute_error(y_test, predictions))
     print('MSE:', metrics.mean_squared_error(y_test, predictions))
@@ -231,15 +265,13 @@ if __name__ == '__main__':
     #columns = net_profit_percent.columns
     #print (sorted(zip(map(lambda x: round(x, 4), rfr.feature_importances_), columns),reverse=True)) 
     
-    
-    
-    
+       
     #subplots method of matplotlib 
     fig, axes = plt.subplots(nrows = 2, ncols = 1)
     axes[0].scatter(y_test, predictions)
     plt.sca(axes[1]) #Use the pyplot interface to change just one subplot
     plt.xticks(range(X_train.shape[1]),X_train.columns, color='r')
     axes[1].bar(range(X_train.shape[1]),rfr.feature_importances_, color= 'b',align = 'center')
-
+    
     
         
