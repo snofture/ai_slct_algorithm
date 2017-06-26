@@ -95,7 +95,7 @@ origin = a[u'产品产地'].value_counts()
 
 
 #import profit table
-sku_profit = pd.read_excel('sku_profit.xlsx',sheetname = 'Sheet123')
+sku_profit = pd.read_table('app_cfo_profit_loss_b2c_det.csv')
 sku_profit['sku_id'] = sku_profit['item_sku_id']
 sku_profit.drop(['dt','item_third_cate_name','item_sku_id','cost_tax',
 'income','grossfit','gross_sales','rebate_amunt_notax',
@@ -214,30 +214,30 @@ if __name__ == '__main__':
     '''
     from sklearn.grid_search import GridSearchCV
     from sklearn.ensemble import RandomForestRegressor
-    rfr = RandomForestRegressor(  n_estimators = 300, 
+    rfr = RandomForestRegressor(  n_estimators = 500, 
                                   max_features = 'auto',
                                   max_depth=8,
                                   min_samples_leaf=4,
                                   min_samples_split=8,
                                   oob_score=True,
-                                  random_state = 42,
+                                  #random_state = 42,
                                   n_jobs=-1,
-                                  criterion = 'mae')
+                                  criterion = 'mae',
+                                  bootstrap = True)
     param_grid = { 
     'max_depth':[5,8],
-    'min_samples_leaf':[2,3,4],
-    'min_samples_split':[6,7,8],
-    'random_state':[42,55]
+    'min_samples_leaf':[2,4,6],
+    'min_samples_split':[4,8,10]
     }
 
 
-    CV_rfr= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=5) 
+    CV_rfr= GridSearchCV(estimator=rfr, param_grid=param_grid, cv=5)
 
     CV_rfr.fit(X_train, y_train) 
     print (CV_rfr.best_params_)
     '''
     
-       
+    
     #implement RandomForestregressor to solve regression problem    
     from sklearn.ensemble import RandomForestRegressor
     rfr = RandomForestRegressor(  n_estimators = 500, 
@@ -246,9 +246,10 @@ if __name__ == '__main__':
                                   min_samples_leaf=4,
                                   min_samples_split=8,
                                   oob_score=True,
-                                  random_state = 42,
+                                  #random_state = 42,
                                   criterion = 'mae',
-                                  n_jobs=-1)
+                                  n_jobs=-1,
+                                  bootstrap = True)
                                   #warm_start=False,
                                   #max_leaf_nodes = 30)
     rfr.fit(X_train, y_train)

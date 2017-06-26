@@ -95,7 +95,7 @@ origin = a[u'产品产地'].value_counts()
 
 
 #import profit table
-sku_profit = pd.read_excel('sku_profit.xlsx',sheetname = 'Sheet123')
+sku_profit = pd.read_table('app_cfo_profit_loss_b2c_det.csv')
 sku_profit['sku_id'] = sku_profit['item_sku_id']
 sku_profit.drop(['dt','item_third_cate_name','item_sku_id','cost_tax',
 'income','grossfit','gross_sales','rebate_amunt_notax',
