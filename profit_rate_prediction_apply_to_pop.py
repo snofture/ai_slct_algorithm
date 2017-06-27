@@ -142,24 +142,24 @@ for attribute in jd_pop.columns.difference([u'sku价格','sku_id']):
 jd_pop[u'sku价格'] = jd_pop[u'sku价格'].apply(lambda x: 
     (x-jd_pop[u'sku价格'].mean())/(jd_pop[u'sku价格'].std()))
 
+    
+    
 #handle high cardinality of brand feature using kmeans clustering
 from sklearn.cluster import KMeans
 X = jd_pop[[u'sku价格',u'产品产地',u'品牌']]
 kmeans = KMeans(n_clusters = 20, random_state = 0).fit(X)
 jd_pop[u'品牌'] = kmeans.labels_
 
+'''
+#use elbow method to find the best number of clusters
+c = range(10,50)
+ks = [KMeans(n_clusters = i) for i in c]
+score = [ks[i].fit(X).score(X) for i in range(len(ks))]
+plt.scatter(c,score)
+'''
 
 
 
-
-
-
-
-
-
-
-
-    
 first = jd_pop.iloc[:1017,:]
 second = jd_pop.iloc[1017:,:]
 
