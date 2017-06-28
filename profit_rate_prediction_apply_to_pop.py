@@ -159,7 +159,6 @@ plt.scatter(c,score)
 '''
 
 
-
 first = jd_pop.iloc[:1017,:]
 second = jd_pop.iloc[1017:,:]
 
