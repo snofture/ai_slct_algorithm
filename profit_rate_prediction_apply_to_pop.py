@@ -41,6 +41,7 @@ pop_attr =  pop_attr.reset_index(drop=False)
 pop_attr = pop_attr.apply(lambda x: x.fillna(x.value_counts().index[0]))
 
 
+#combine jd & pop attributes table
 jd_pop_attrs = pd.concat([a,pop_attr],ignore_index = True)
 
 jd_pop_attrs.drop([u'适用场景', u'茶饮料系列',u'碳酸饮料分类',u'是否含糖',u'功能饮料'],axis = 1, inplace = True) 

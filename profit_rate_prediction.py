@@ -18,7 +18,7 @@ def mean_absolute_percentage_error(y,p):
     return np.mean(np.abs((y-p)/y))
 
 
-#import attributes table
+#import jd attributes table
 attrs =  pd.read_table('sku_attrs_jd.csv',sep = '\t', encoding = 'utf-8') 
 sku_attrs = attrs[['sku_id','attr_name','attr_value']]
 
@@ -165,7 +165,7 @@ net_profit_percent = net_profit_percent[cols]
 
 #net_profit_percent = encode_onehot(net_profit_percent, [u'产品产地'])
 
-'''
+
 #label encoder method to handle discrete/categorical features except continuous features
 for attribute in net_profit_percent.columns.difference(['profit_rate','sku价格']):
     le = preprocessing.LabelEncoder()
@@ -184,12 +184,18 @@ net_profit_percent = pd.get_dummies(net_profit_percent, columns=[u'产品产地'
                                                                  #u'碳酸饮料分类'],
     prefix=['origin', 'classifi','package','pakunit','unitvol','taste'
             ,'juiceper','brand','import'])
-
+'''
 
 #normalize continuous features('price')
 net_profit_percent[u'sku价格'] = net_profit_percent[u'sku价格'].apply(lambda x: 
     (x-net_profit_percent[u'sku价格'].mean())/(net_profit_percent[u'sku价格'].std()))
-       
+
+#handle high cardinality of brand feature using kmeans clustering
+from sklearn.cluster import KMeans
+X = net_profit_percent[[u'sku价格',u'产品产地',u'品牌']]
+kmeans = KMeans(n_clusters = 20, random_state = 0).fit(X)
+net_profit_percent[u'品牌'] = kmeans.labels_
+      
 '''
 net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].apply(lambda x: 
     (x-net_profit_percent['profit_rate'].mean())/(net_profit_percent['profit_rate'].std()))
