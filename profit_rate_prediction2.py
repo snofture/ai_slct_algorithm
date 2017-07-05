@@ -175,7 +175,7 @@ for attribute in attr_price_ware.columns.difference([u'sku价格','sku_id','ware
     le = preprocessing.LabelEncoder()
     attr_price_ware[attribute] = le.fit_transform(attr_price_ware[attribute])
 
-#normalize continuous features('price')
+#normalize continuous features('sku价格, warehouse_price')
 attr_price_ware[u'sku价格'] = attr_price_ware[u'sku价格'].apply(lambda x: 
     (x-attr_price_ware[u'sku价格'].mean())/(attr_price_ware[u'sku价格'].std()))
 
@@ -239,8 +239,7 @@ gmv_netprofit = pd.merge(average_gmv,average_profit,on='sku_id',how='inner')
 
 #merge jd_pop attributes_price_warehouseprice table and average gmv_netprofit table based on sku_id
 net_profit_percent = pd.merge(attr_price_ware,gmv_netprofit, how = 'inner', on = 'sku_id')
-net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].astype(int)
-#final_npp.to_csv('final_npp.csv', encoding = 'utf-8') to show final_npp content
+#net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].astype(int)
 net_profit_percent = net_profit_percent[net_profit_percent['profit_rate'] != 0]
 
 net_profit_percent.drop('sku_id',axis = 1, inplace = True)
@@ -249,13 +248,25 @@ net_profit_percent.drop('sku_id',axis = 1, inplace = True)
 #normalize continuous features('gmv')
 net_profit_percent['gmv'] = net_profit_percent['gmv'].apply(lambda x: 
     (x-net_profit_percent['gmv'].mean())/(net_profit_percent['gmv'].std()))
+'''
+k = net_profit_percent['profit_rate'].max()
+l = net_profit_percent['profit_rate'].min()
+m = k - l
+v = net_profit_percent[net_profit_percent[u'分类'] == 0]['profit_rate']
+v = v.apply(lambda x: (x-l)/m)
+'''   
 
 
-if __name__ == '__main__':    
+#normalize continuous features('profit_rate')
+k = net_profit_percent['profit_rate'].max()
+l = net_profit_percent['profit_rate'].min()
+m = k - l
+net_profit_percent['profit_rate'] = net_profit_percent['profit_rate'].apply(lambda x: (x-l)/ m)
+
+
+
     
-    net_profit_percent.replace(-1,-3,inplace=True)
-    #net_profit_percent.drop(net_profit_percent.index[[227,476,383,293,392,360]], inplace = True)
-    #net_profit_percent.drop(net_profit_percent.index[[392,360]], inplace = True)
+if __name__ == '__main__':       
     #train_test_split
     from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(net_profit_percent.drop('profit_rate',
@@ -306,19 +317,7 @@ if __name__ == '__main__':
     rfr.fit(X_train, y_train)
     predictions = rfr.predict(X_test)
     
-    
-    #predictions = pd.Series(predictions)
-    #predictions[predictions >-1 & predictions < 1] = 1
-    #predictions [predictions[predictions >-1] & predictions[predictions < 1]] = 1
-    '''
-    y_test.replace(1,2,inplace=True)  
-    
-    
-    predictions.replace(-1.3,-2,inplace=True)
-    predictions.replace(-1.03,-2,inplace=True)
-    predictions.replace(-1.96,-2,inplace=True)    
-    '''
-    
+
     '''
     #log likelihood
     def ll(y_test, predictions):

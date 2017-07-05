@@ -108,7 +108,7 @@ jd_pop_attrs[u'产品产地'].replace(u'印尼',u'泰国',inplace = True)
 first = jd_pop_attrs.iloc[:1033,:]
 second = jd_pop_attrs.iloc[1033:,:]
 '''
-jd_pop_attrs[u'品牌'].value_counts()
+#jd_pop_attrs[u'品牌'].value_counts()
 
 
 #import sku_price table
